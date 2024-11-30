@@ -1,9 +1,18 @@
 import dotenv from 'dotenv'
 import connectdb from './db/index.js';
+import express from 'express'
 dotenv.config(
 
 );
-connectdb();
+const app=express();
+connectdb()
+.then(()=>{
+    app.listen(process.env.PORT|| 8000)
+    console.log(`Server is listening on ${process.env.PORT}`)
+})
+.catch((error)=>{
+    console.log("MongoDB connection failed",error)
+})
 
 //iffi function--immediated call--method 1
 /*(async()=>{
