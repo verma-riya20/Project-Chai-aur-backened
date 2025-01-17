@@ -13,6 +13,52 @@ const registerUser=asyncHandler(async(req,res)=>{
    //create user object, create user entry in db
    //remove password and refresh token from the responce
    //return res(
+   const {fullName,username,email,password}=req.body;
+   if(!fullName || !username || !email || !password){
+              throw new ApiError(400,"All fields are required")
+   }
+   const existingUser=await User.findOne(
+     {
+        $or:{
+            email,password
+        }
+     }
+   )
+   if(existingUser){
+    throw new ApiError(400,"user already exists")
+   }
+   const avatarLocalPath=req.files.avatar[0]?.path;
+   const coverImageLocalPath=req.files.coverImage[0]?.path;
+   if(!avatarLocalPath){
+    throw new ApiError(400,"Avatar is required");
+   }
+   const avatar=await uploadOnCloudinary(avatarLocalPath);
+   if(!avatarLocalPath){
+    throw new ApiError(400,"no avatar")
+   }
+   const coverImage=await uploadOnCloudinary(coverImageLocalPath);
+   if(!coverImage){
+    throw new ApiError(400,"no cover image")
+   }
+   const user=await User.create({
+       username:username.toLowerCase(),
+       fullName,
+       email,
+       password,
+       avatar:avatar.url,
+       coverImage:coverImage.url,
+   })
+   //to check if user is created
+   const createdUser=await User.findById(req.user?._id)
+   .select("-password -refreshTokens")  //to remove these two from created user to be sent
+   if(!createdUser){
+    throw new ApiError(400,"User is not created");
+   }
+   return res
+   .status(200)
+   .json(
+    new ApiResponse(201,createdUser,"User created successfully")
+   )
 });
    const changeCurrentUser=asyncHandler(async(req,res)=>{
     const {oldPassword,newPassword}=req.body;
@@ -49,7 +95,7 @@ const updateUserDetails=asyncHandler(async(req,res)=>{
 })
 //update avatar
 const updateAvatar=asyncHandler(async(req,res)=>{
-    const avatarlocalpath=req.file.path;
+    const avatarLocalPath=req.file.path;
     if(!avatarlocalpath){
         throw new ApiError(400,"Avatar image is required");
     }
