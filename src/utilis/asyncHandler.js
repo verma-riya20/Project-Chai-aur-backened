@@ -1,6 +1,6 @@
 //Method 1 using promise
 const asyncHandler=(requesthandler)=>{
-    (res,req,next)=>{
+    return (res,req,next)=>{
        Promise.resolve(requesthandler(res,req,next))
        .catch((err)=>next(err));
        
@@ -22,4 +22,4 @@ const asyncHandler=(requesthandler)=>{
 }
     */
 
-export default asyncHandler
+export {asyncHandler}
